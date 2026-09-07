@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}{{ book.title }}{% endblock %}
+{% block page_title %}Book Details{% endblock %}
+{% block content %}
+<div class="mb-3">
+    <a href="{% url 'book_list' %}" class="text-decoration-none text-secondary-custom"><i class="bi bi-arrow-left"></i> Back to Books</a>
+</div>
+<div class="row g-4">
+    <div class="col-12 col-md-4 col-lg-3">
+        {% if book.cover_image_url %}
+            <img src="{{ book.cover_image_url }}" alt="{{ book.title }}" class="book-card-cover w-100" style="border-radius: 12px; border: 1px solid var(--color-border); aspect-ratio: 3/4; object-fit: cover;">
+        {% else %}
+            <div class="book-cover-placeholder" style="border-radius: 12px; aspect-ratio: 3/4;">
+                <i class="bi bi-book"></i>
+            </div>
+        {% endif %}
+    </div>
+    <div class="col-12 col-md-8 col-lg-9">
+        <div class="card-surface">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                <div>
+                    <h2 class="mb-1">{{ book.title }}</h2>
+                    <div class="text-secondary-custom mb-2">by {{ book.author }}</div>
+                </div>
+                {% if book.stock_status == "in_stock" %}
+                    <span class="status-badge status-in-stock">{{ book.stock_status_label }}</span>
+                {% elif book.stock_status == "low_stock" %}
+                    <span class="status-badge status-low-stock">{{ book.stock_status_label }}</span>
+                {% else %}
+                    <span class="status-badge status-out-of-stock">{{ book.stock_status_label }}</span>
+                {% endif %}
+            </div>
+
+            <div class="row mt-3 g-3">
+                <div class="col-6 col-lg-3">
+                    <div class="caption">PRICE</div>
+                    <div class="fw-semibold fs-5">₦{{ book.price|floatformat:2 }}</div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="caption">STOCK</div>
+                    <div class="fw-semibold fs-5">{{ book.quantity }} copies</div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="caption">CATEGORY</div>
+                    <div class="fw-semibold fs-5">{{ book.category.name }}</div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="caption">ISBN</div>
+                    <div class="fw-semibold fs-5">{{ book.isbn }}</div>
+                </div>
+            </div>
+
+            {% if book.description %}
+            <div class="mt-4">
+                <div class="caption mb-1">DESCRIPTION</div>
+                <p class="mb-0">{{ book.description }}</p>
+            </div>
+            {% endif %}
+
+            <div class="mt-4 d-flex gap-2">
+                <a href="{% url 'book_edit' book.pk %}" class="btn btn-primary-custom"><i class="bi bi-pencil"></i> Edit Book</a>
+                <button type="button" class="btn btn-outline-plain text-danger" data-bs-toggle="modal" data-bs-target="#deleteBookDetail">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteBookDetail" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Book</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">Are you sure you want to delete "{{ book.title }}"? This action cannot be undone.</div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-plain" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'book_delete' book.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger-custom">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

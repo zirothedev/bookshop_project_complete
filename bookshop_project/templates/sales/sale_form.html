@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Record Sale{% endblock %}
+{% block page_title %}Record New Sale{% endblock %}
+{% block content %}
+<div class="card-surface" style="max-width: 820px;">
+
+    {% if formset.non_form_errors %}
+        <div class="alert alert-danger">{{ formset.non_form_errors }}</div>
+    {% endif %}
+
+    <form method="post" id="sale-form">
+        {% csrf_token %}
+
+        <div class="mb-4">
+            <label class="form-label">Customer</label>
+            {{ sale_form.customer }}
+            {% if sale_form.customer.errors %}<div class="text-danger small mt-1">{{ sale_form.customer.errors.0 }}</div>{% endif %}
+        </div>
+
+        {{ formset.management_form }}
+
+        <label class="form-label">Books</label>
+        <div id="sale-items">
+            {% for form in formset %}
+            <div class="sale-item-row card-surface mb-2" style="background: var(--color-surface); border-style: dashed;">
+                <div class="row g-2 align-items-end">
+                    <div class="col-12 col-md-5">
+                        <label class="form-label caption">BOOK</label>
+                        {{ form.book }}
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label caption">QUANTITY</label>
+                        {{ form.quantity }}
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label caption">UNIT PRICE</label>
+                        <input type="text" class="form-control unit-price-display" readonly value="₦0.00">
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label caption">SUBTOTAL</label>
+                        <input type="text" class="form-control subtotal-display" readonly value="₦0.00">
+                    </div>
+                    <div class="col-6 col-md-1 text-end">
+                        {% if form.instance.pk %}{{ form.DELETE }}{% else %}
+                        <button type="button" class="btn btn-outline-plain remove-row-btn"><i class="bi bi-trash"></i></button>
+                        {% endif %}
+                    </div>
+                    {% if form.non_field_errors %}
+                        <div class="col-12"><div class="text-danger small">{{ form.non_field_errors.0 }}</div></div>
+                    {% endif %}
+                </div>
+                {{ form.id }}
+            </div>
+            {% endfor %}
+        </div>
+
+        <button type="button" id="add-row-btn" class="btn btn-secondary-custom btn-sm mb-4">
+            <i class="bi bi-plus-lg"></i> Add Another Book
+        </button>
+
+        <div class="card-surface d-flex justify-content-between align-items-center" style="background: var(--color-primary-light); border-color: var(--color-primary);">
+            <span class="fw-semibold">Total Amount</span>
+            <span class="fs-4 fw-bold" id="grand-total">₦0.00</span>
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+            <a href="{% url 'sale_list' %}" class="btn btn-outline-plain">Cancel</a>
+            <button type="submit" class="btn btn-primary-custom">Record Sale</button>
+        </div>
+    </form>
+</div>
+
+<!-- Empty form template for adding rows dynamically -->
+<div id="empty-form-template" class="d-none">
+    <div class="sale-item-row card-surface mb-2" style="background: var(--color-surface); border-style: dashed;">
+        <div class="row g-2 align-items-end">
+            <div class="col-12 col-md-5">
+                <label class="form-label caption">BOOK</label>
+                {{ formset.empty_form.book }}
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label caption">QUANTITY</label>
+                {{ formset.empty_form.quantity }}
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label caption">UNIT PRICE</label>
+                <input type="text" class="form-control unit-price-display" readonly value="₦0.00">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label caption">SUBTOTAL</label>
+                <input type="text" class="form-control subtotal-display" readonly value="₦0.00">
+            </div>
+            <div class="col-6 col-md-1 text-end">
+                <button type="button" class="btn btn-outline-plain remove-row-btn"><i class="bi bi-trash"></i></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const BOOK_DATA = {
+    {% for book in formset.forms.0.fields.book.queryset %}
+    "{{ book.pk }}": {price: {{ book.price }}, stock: {{ book.quantity }}},
+    {% endfor %}
+};
+
+function attachRowEvents(row) {
+    const bookSelect = row.querySelector('select[name$="-book"]');
+    const qtyInput = row.querySelector('input[name$="-quantity"]');
+    const priceDisplay = row.querySelector('.unit-price-display');
+    const subtotalDisplay = row.querySelector('.subtotal-display');
+    const removeBtn = row.querySelector('.remove-row-btn');
+
+    function recalcRow() {
+        const bookId = bookSelect.value;
+        const qty = parseFloat(qtyInput.value) || 0;
+        const data = BOOK_DATA[bookId];
+        if (data) {
+            priceDisplay.value = "₦" + data.price.toFixed(2);
+            subtotalDisplay.value = "₦" + (data.price * qty).toFixed(2);
+        } else {
+            priceDisplay.value = "₦0.00";
+            subtotalDisplay.value = "₦0.00";
+        }
+        recalcGrandTotal();
+    }
+
+    bookSelect.addEventListener('change', recalcRow);
+    qtyInput.addEventListener('input', recalcRow);
+    if (removeBtn) {
+        removeBtn.addEventListener('click', function () {
+            row.remove();
+            renumberForms();
+            recalcGrandTotal();
+        });
+    }
+    recalcRow();
+}
+
+function recalcGrandTotal() {
+    let total = 0;
+    document.querySelectorAll('#sale-items .sale-item-row').forEach(function (row) {
+        const bookSelect = row.querySelector('select[name$="-book"]');
+        const qtyInput = row.querySelector('input[name$="-quantity"]');
+        const data = BOOK_DATA[bookSelect.value];
+        const qty = parseFloat(qtyInput.value) || 0;
+        if (data) total += data.price * qty;
+    });
+    document.getElementById('grand-total').textContent = "₦" + total.toFixed(2);
+}
+
+function renumberForms() {
+    const rows = document.querySelectorAll('#sale-items .sale-item-row');
+    const totalFormsInput = document.querySelector('input[name="items-TOTAL_FORMS"]');
+    rows.forEach(function (row, index) {
+        row.querySelectorAll('input, select').forEach(function (el) {
+            if (el.name) el.name = el.name.replace(/items-\d+-/, 'items-' + index + '-');
+            if (el.id) el.id = el.id.replace(/id_items-\d+-/, 'id_items-' + index + '-');
+        });
+    });
+    totalFormsInput.value = rows.length;
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('#sale-items .sale-item-row').forEach(attachRowEvents);
+
+    document.getElementById('add-row-btn').addEventListener('click', function () {
+        const container = document.getElementById('sale-items');
+        const template = document.getElementById('empty-form-template').firstElementChild;
+        const totalFormsInput = document.querySelector('input[name="items-TOTAL_FORMS"]');
+        const newIndex = container.querySelectorAll('.sale-item-row').length;
+
+        const clone = template.cloneNode(true);
+        clone.querySelectorAll('input, select').forEach(function (el) {
+            if (el.name) el.name = el.name.replace('__prefix__', newIndex);
+            if (el.id) el.id = el.id.replace('__prefix__', newIndex);
+        });
+        container.appendChild(clone);
+        totalFormsInput.value = newIndex + 1;
+        attachRowEvents(clone);
+    });
+});
+</script>
+{% endblock %}

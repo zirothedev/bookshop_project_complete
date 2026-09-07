@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ customer.name }}{% endblock %}
+{% block page_title %}Customer Details{% endblock %}
+{% block content %}
+<div class="mb-3">
+    <a href="{% url 'customer_list' %}" class="text-decoration-none text-secondary-custom"><i class="bi bi-arrow-left"></i> Back to Customers</a>
+</div>
+<div class="card-surface mb-3">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+            <h2 class="mb-1">{{ customer.name }}</h2>
+            <div class="text-secondary-custom">{{ customer.email|default:"No email" }} &middot; {{ customer.phone|default:"No phone" }}</div>
+        </div>
+        <a href="{% url 'customer_edit' customer.pk %}" class="btn btn-primary-custom"><i class="bi bi-pencil"></i> Edit</a>
+    </div>
+</div>
+
+<h3 class="mb-3">Purchase History</h3>
+<div class="table-custom">
+    <table class="table">
+        <thead><tr><th>Sale ID</th><th>Date</th><th class="text-end">Total</th></tr></thead>
+        <tbody>
+        {% for sale in sales %}
+            <tr>
+                <td><a href="{% url 'sale_detail' sale.pk %}">#{{ sale.pk }}</a></td>
+                <td class="text-secondary-custom">{{ sale.created_at|date:"d M Y, H:i" }}</td>
+                <td class="text-end fw-semibold">₦{{ sale.total_amount|floatformat:2 }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="3">
+                <div class="empty-state"><i class="bi bi-receipt"></i><div class="empty-title">No purchases yet</div></div>
+            </td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

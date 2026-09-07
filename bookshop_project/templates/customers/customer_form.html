@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{% if is_edit %}Edit Customer{% else %}Add Customer{% endif %}{% endblock %}
+{% block page_title %}{% if is_edit %}Edit Customer{% else %}Add Customer{% endif %}{% endblock %}
+{% block content %}
+<div class="card-surface" style="max-width: 560px;">
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="form-label">Full Name</label>
+            {{ form.name }}
+            {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Phone</label>
+            {{ form.phone }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Email</label>
+            {{ form.email }}
+            {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'customer_list' %}" class="btn btn-outline-plain">Cancel</a>
+            <button type="submit" class="btn btn-primary-custom">{% if is_edit %}Save Changes{% else %}Save Customer{% endif %}</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block page_title %}Settings{% endblock %}
+{% block content %}
+<div class="card-surface">
+    <h3 class="mb-3">Application Settings</h3>
+    <p class="text-secondary-custom">Logged in as <strong>{{ user.get_username }}</strong></p>
+    <p class="text-secondary-custom mb-0">Additional settings options will be added here as needed.</p>
+</div>
+{% endblock %}

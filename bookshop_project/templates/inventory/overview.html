@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Inventory{% endblock %}
+{% block page_title %}Inventory{% endblock %}
+{% block content %}
+
+<div class="row g-3 mb-3">
+    <div class="col-12 col-md-4">
+        <div class="stat-card">
+            <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background: var(--color-success-bg); color: var(--color-success);"><i class="bi bi-check-circle"></i></div>
+                <div>
+                    <div class="stat-value" style="font-size: 22px;">{{ in_stock_count }}</div>
+                    <div class="caption">In Stock &middot; Sufficient quantity</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="stat-card">
+            <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background: var(--color-warning-bg); color: var(--color-warning);"><i class="bi bi-exclamation-triangle"></i></div>
+                <div>
+                    <div class="stat-value" style="font-size: 22px;">{{ low_stock_count }}</div>
+                    <div class="caption">Low Stock &middot; Reorder soon</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="stat-card">
+            <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background: var(--color-danger-bg); color: var(--color-danger);"><i class="bi bi-x-circle"></i></div>
+                <div>
+                    <div class="stat-value" style="font-size: 22px;">{{ out_of_stock_count }}</div>
+                    <div class="caption">Out of Stock</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form method="get" class="card-surface mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-12 col-md-6">
+            <label class="form-label">Search</label>
+            <div class="search-input-wrap">
+                <i class="bi bi-search"></i>
+                <input type="text" name="q" class="form-control" placeholder="Search books or authors..." value="{{ query }}">
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label">Stock Level</label>
+            <select name="status" class="form-select">
+                <option value="">All Levels</option>
+                <option value="in_stock" {% if selected_status == "in_stock" %}selected{% endif %}>In Stock</option>
+                <option value="low_stock" {% if selected_status == "low_stock" %}selected{% endif %}>Low Stock</option>
+                <option value="out_of_stock" {% if selected_status == "out_of_stock" %}selected{% endif %}>Out of Stock</option>
+            </select>
+        </div>
+        <div class="col-6 col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-primary-custom flex-grow-1">Apply</button>
+            <a href="{% url 'inventory_overview' %}" class="btn btn-outline-plain">Clear</a>
+        </div>
+    </div>
+</form>
+
+<div class="table-custom">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Book Title</th>
+                <th>Author</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Current Stock</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for book in books %}
+            <tr>
+                <td><a href="{% url 'book_detail' book.pk %}" class="fw-semibold text-decoration-none" style="color: var(--color-text);">{{ book.title }}</a></td>
+                <td class="text-secondary-custom">{{ book.author }}</td>
+                <td class="text-secondary-custom">{{ book.category.name }}</td>
+                <td>₦{{ book.price|floatformat:2 }}</td>
+                <td>{{ book.quantity }}</td>
+                <td>
+                    {% if book.stock_status == "in_stock" %}
+                        <span class="status-badge status-in-stock">In Stock</span>
+                    {% elif book.stock_status == "low_stock" %}
+                        <span class="status-badge status-low-stock">Low Stock</span>
+                    {% else %}
+                        <span class="status-badge status-out-of-stock">Out of Stock</span>
+                    {% endif %}
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="6">
+                <div class="empty-state">
+                    <i class="bi bi-box-seam"></i>
+                    <div class="empty-title">No books match this view</div>
+                </div>
+            </td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

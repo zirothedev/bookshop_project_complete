@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Customers{% endblock %}
+{% block page_title %}Customers{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <form method="get" class="search-input-wrap" style="width: 280px;">
+        <i class="bi bi-search"></i>
+        <input type="text" name="q" class="form-control" placeholder="Search customers..." value="{{ query }}">
+    </form>
+    <a href="{% url 'customer_create' %}" class="btn btn-primary-custom"><i class="bi bi-plus-lg"></i> Add Customer</a>
+</div>
+
+<div class="table-custom">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Customer Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Total Purchases</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for customer in customers %}
+            <tr>
+                <td><a href="{% url 'customer_detail' customer.pk %}" class="fw-semibold text-decoration-none" style="color: var(--color-text);">{{ customer.name }}</a></td>
+                <td class="text-secondary-custom">{{ customer.email|default:"—" }}</td>
+                <td class="text-secondary-custom">{{ customer.phone|default:"—" }}</td>
+                <td>{{ customer.sales.count }}</td>
+                <td class="text-end">
+                    <a href="{% url 'customer_edit' customer.pk %}" class="btn btn-sm btn-outline-plain"><i class="bi bi-pencil"></i></a>
+                    <button type="button" class="btn btn-sm btn-outline-plain text-danger" data-bs-toggle="modal" data-bs-target="#deleteCust{{ customer.pk }}"><i class="bi bi-trash"></i></button>
+                    <div class="modal fade" id="deleteCust{{ customer.pk }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Delete Customer</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">Are you sure you want to delete "{{ customer.name }}"? This action cannot be undone.</div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-outline-plain" data-bs-dismiss="modal">Cancel</button>
+                                    <form method="post" action="{% url 'customer_delete' customer.pk %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger-custom">Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="5">
+                <div class="empty-state">
+                    <i class="bi bi-people"></i>
+                    <div class="empty-title">No customers found</div>
+                    <div>You haven't added any customers yet.</div>
+                    <a href="{% url 'customer_create' %}" class="btn btn-primary-custom mt-3">Add Customer</a>
+                </div>
+            </td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

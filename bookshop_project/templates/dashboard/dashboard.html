@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-label mb-1">Total Books</div>
+                    <div class="stat-value">{{ total_books }}</div>
+                </div>
+                <div class="stat-icon"><i class="bi bi-journal-bookmark"></i></div>
+            </div>
+            {% if books_growth is not None %}
+                <div class="caption mt-2 {% if books_growth >= 0 %}text-success{% else %}text-danger{% endif %}">
+                    <i class="bi bi-arrow-{% if books_growth >= 0 %}up{% else %}down{% endif %}"></i>
+                    {{ books_growth }}% from last month
+                </div>
+            {% else %}
+                <div class="caption mt-2 text-secondary-custom">Across {{ total_books }} titles</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-label mb-1">Total Stock</div>
+                    <div class="stat-value">{{ total_stock }}</div>
+                </div>
+                <div class="stat-icon"><i class="bi bi-box-seam"></i></div>
+            </div>
+            <div class="caption mt-2 text-secondary-custom">
+                {{ low_stock_books.count }} book{{ low_stock_books.count|pluralize }} need{{ low_stock_books.count|pluralize:"s," }} restocking
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-label mb-1">Total Customers</div>
+                    <div class="stat-value">{{ total_customers }}</div>
+                </div>
+                <div class="stat-icon"><i class="bi bi-people"></i></div>
+            </div>
+            {% if customers_growth is not None %}
+                <div class="caption mt-2 {% if customers_growth >= 0 %}text-success{% else %}text-danger{% endif %}">
+                    <i class="bi bi-arrow-{% if customers_growth >= 0 %}up{% else %}down{% endif %}"></i>
+                    {{ customers_growth }}% from last month
+                </div>
+            {% else %}
+                <div class="caption mt-2 text-secondary-custom">All registered customers</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-label mb-1">Total Revenue</div>
+                    <div class="stat-value">₦{{ total_revenue|floatformat:0 }}</div>
+                </div>
+                <div class="stat-icon"><i class="bi bi-graph-up-arrow"></i></div>
+            </div>
+            {% if revenue_growth is not None %}
+                <div class="caption mt-2 {% if revenue_growth >= 0 %}text-success{% else %}text-danger{% endif %}">
+                    <i class="bi bi-arrow-{% if revenue_growth >= 0 %}up{% else %}down{% endif %}"></i>
+                    {{ revenue_growth }}% from last month
+                </div>
+            {% else %}
+                <div class="caption mt-2 text-secondary-custom">All-time revenue</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-12 col-lg-8">
+        <div class="card-surface h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="mb-0" style="font-size: 16px;">Sales Overview</h3>
+                <span class="caption">Last 6 months</span>
+            </div>
+            <canvas id="salesChart" height="110"></canvas>
+        </div>
+    </div>
+    <div class="col-12 col-lg-4">
+        <div class="card-surface h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="mb-0" style="font-size: 16px;">Top Selling Books</h3>
+            </div>
+            {% for row in top_books %}
+                <div class="d-flex justify-content-between align-items-center py-2 {% if not forloop.last %}border-bottom{% endif %}" style="border-color: var(--color-border) !important;">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 6px; background: var(--color-primary-light); color: var(--color-primary); font-size: 12px; font-weight: 700;">{{ forloop.counter }}</span>
+                        <span class="fw-medium" style="font-size: 13px;">{{ row.book__title }}</span>
+                    </div>
+                    <span class="fw-semibold" style="font-size: 13px;">₦{{ row.revenue|floatformat:0 }}</span>
+                </div>
+            {% empty %}
+                <div class="empty-state py-3">
+                    <i class="bi bi-bar-chart"></i>
+                    <div>No sales recorded yet.</div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-lg-7">
+        <div class="card-surface h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="mb-0" style="font-size: 16px;">Recent Sales</h3>
+                <a href="{% url 'sale_list' %}" class="caption text-decoration-none" style="color: var(--color-primary);">View all</a>
+            </div>
+            {% for sale in recent_sales %}
+                <div class="d-flex justify-content-between align-items-center py-2 {% if not forloop.last %}border-bottom{% endif %}" style="border-color: var(--color-border) !important;">
+                    <div>
+                        <a href="{% url 'sale_detail' sale.pk %}" class="fw-medium text-decoration-none" style="font-size: 13px; color: var(--color-text);">{{ sale.customer.name }}</a>
+                        <div class="caption">{{ sale.created_at|date:"d M Y, H:i" }}</div>
+                    </div>
+                    <span class="fw-semibold" style="font-size: 13px;">₦{{ sale.total_amount|floatformat:2 }}</span>
+                </div>
+            {% empty %}
+                <div class="empty-state py-3">
+                    <i class="bi bi-receipt"></i>
+                    <div>No sales recorded yet.</div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="col-12 col-lg-5">
+        <div class="card-surface h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="mb-0" style="font-size: 16px;">Low Stock Books</h3>
+                <a href="{% url 'inventory_overview' %}" class="caption text-decoration-none" style="color: var(--color-primary);">View all</a>
+            </div>
+            {% for book in low_stock_books %}
+                <div class="d-flex justify-content-between align-items-center py-2 {% if not forloop.last %}border-bottom{% endif %}" style="border-color: var(--color-border) !important;">
+                    <div>
+                        <a href="{% url 'book_detail' book.pk %}" class="fw-medium text-decoration-none" style="font-size: 13px; color: var(--color-text);">{{ book.title }}</a>
+                        <div class="caption">{{ book.category.name }}</div>
+                    </div>
+                    {% if book.stock_status == "out_of_stock" %}
+                        <span class="status-badge status-out-of-stock">Out of Stock</span>
+                    {% else %}
+                        <span class="status-badge status-low-stock">{{ book.quantity }} left</span>
+                    {% endif %}
+                </div>
+            {% empty %}
+                <div class="empty-state py-3">
+                    <i class="bi bi-check-circle"></i>
+                    <div>All books are well stocked.</div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+const ctx = document.getElementById('salesChart');
+const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 220);
+gradient.addColorStop(0, 'rgba(15, 118, 110, 0.25)');
+gradient.addColorStop(1, 'rgba(15, 118, 110, 0.0)');
+
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: {{ chart_labels_json|safe }},
+        datasets: [{
+            label: 'Revenue',
+            data: {{ chart_values_json|safe }},
+            borderColor: '#0F766E',
+            backgroundColor: gradient,
+            fill: true,
+            tension: 0.35,
+            pointRadius: 3,
+            pointBackgroundColor: '#0F766E',
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { beginAtZero: true, grid: { color: '#E5E7EB' }, ticks: { callback: (v) => '₦' + v.toLocaleString() } },
+            x: { grid: { display: false } }
+        }
+    }
+});
+</script>
+{% endblock %}

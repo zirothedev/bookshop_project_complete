@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block title %}Books{% endblock %}
+{% block page_title %}Books{% endblock %}
+{% block content %}
+<form method="get" class="card-surface mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-12 col-md-4">
+            <label class="form-label">Search</label>
+            <div class="search-input-wrap">
+                <i class="bi bi-search"></i>
+                <input type="text" name="q" class="form-control" placeholder="Search books, authors, ISBN..." value="{{ query }}">
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label">Category</label>
+            <select name="category" class="form-select">
+                <option value="">All Categories</option>
+                {% for c in categories %}
+                <option value="{{ c.pk }}" {% if selected_category == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-select">
+                <option value="">All Status</option>
+                <option value="in_stock" {% if selected_status == "in_stock" %}selected{% endif %}>In Stock</option>
+                <option value="low_stock" {% if selected_status == "low_stock" %}selected{% endif %}>Low Stock</option>
+                <option value="out_of_stock" {% if selected_status == "out_of_stock" %}selected{% endif %}>Out of Stock</option>
+            </select>
+        </div>
+        <div class="col-12 col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary-custom flex-grow-1">Apply</button>
+            <a href="{% url 'book_list' %}" class="btn btn-outline-plain">Clear</a>
+        </div>
+    </div>
+</form>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="btn-group" role="group" aria-label="View toggle">
+        <button type="button" class="btn btn-outline-plain view-toggle-btn active" data-view="table" id="tableViewBtn">
+            <i class="bi bi-list-ul"></i> Table
+        </button>
+        <button type="button" class="btn btn-outline-plain view-toggle-btn" data-view="grid" id="gridViewBtn">
+            <i class="bi bi-grid-3x3-gap"></i> Cards
+        </button>
+    </div>
+    <a href="{% url 'book_create' %}" class="btn btn-primary-custom"><i class="bi bi-plus-lg"></i> Add Book</a>
+</div>
+
+<div id="books-table-view" class="table-custom">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Book Title</th>
+                <th>Category</th>
+                <th>Author</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for book in books %}
+            <tr>
+                <td><a href="{% url 'book_detail' book.pk %}" class="fw-semibold text-decoration-none" style="color: var(--color-text);">{{ book.title }}</a></td>
+                <td class="text-secondary-custom">{{ book.category.name }}</td>
+                <td class="text-secondary-custom">{{ book.author }}</td>
+                <td>₦{{ book.price|floatformat:2 }}</td>
+                <td>{{ book.quantity }}</td>
+                <td>
+                    {% if book.stock_status == "in_stock" %}
+                        <span class="status-badge status-in-stock">{{ book.stock_status_label }}</span>
+                    {% elif book.stock_status == "low_stock" %}
+                        <span class="status-badge status-low-stock">{{ book.stock_status_label }}</span>
+                    {% else %}
+                        <span class="status-badge status-out-of-stock">{{ book.stock_status_label }}</span>
+                    {% endif %}
+                </td>
+                <td class="text-end">
+                    <a href="{% url 'book_edit' book.pk %}" class="btn btn-sm btn-outline-plain"><i class="bi bi-pencil"></i></a>
+                    <button type="button" class="btn btn-sm btn-outline-plain text-danger" data-bs-toggle="modal" data-bs-target="#deleteBook{{ book.pk }}"><i class="bi bi-trash"></i></button>
+                    <div class="modal fade" id="deleteBook{{ book.pk }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Delete Book</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">Are you sure you want to delete "{{ book.title }}"? This action cannot be undone.</div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-outline-plain" data-bs-dismiss="modal">Cancel</button>
+                                    <form method="post" action="{% url 'book_delete' book.pk %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger-custom">Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="7">
+                <div class="empty-state">
+                    <i class="bi bi-journal-bookmark"></i>
+                    <div class="empty-title">No books found</div>
+                    <div>You haven't added any books yet.</div>
+                    <a href="{% url 'book_create' %}" class="btn btn-primary-custom mt-3">Add Your First Book</a>
+                </div>
+            </td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div id="books-grid-view" class="row g-3 d-none">
+    {% for book in books %}
+    <div class="col-6 col-md-4 col-lg-3">
+        <div class="book-card">
+            <a href="{% url 'book_detail' book.pk %}" class="text-decoration-none">
+                {% if book.cover_image_url %}
+                    <img src="{{ book.cover_image_url }}" alt="{{ book.title }}" class="book-cover">
+                {% else %}
+                    <div class="book-cover-placeholder"><i class="bi bi-book"></i></div>
+                {% endif %}
+            </a>
+            <div class="book-card-body">
+                <a href="{% url 'book_detail' book.pk %}" class="text-decoration-none" style="color: var(--color-text);">
+                    <div class="book-title">{{ book.title }}</div>
+                </a>
+                <div class="book-author">{{ book.author }}</div>
+                <div class="d-flex justify-content-between align-items-center mt-auto">
+                    <span class="book-price">₦{{ book.price|floatformat:0 }}</span>
+                    {% if book.stock_status == "in_stock" %}
+                        <span class="status-badge status-in-stock">{{ book.quantity }}</span>
+                    {% elif book.stock_status == "low_stock" %}
+                        <span class="status-badge status-low-stock">{{ book.quantity }}</span>
+                    {% else %}
+                        <span class="status-badge status-out-of-stock">0</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="empty-state">
+            <i class="bi bi-journal-bookmark"></i>
+            <div class="empty-title">No books found</div>
+            <a href="{% url 'book_create' %}" class="btn btn-primary-custom mt-3">Add Your First Book</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    var tableBtn = document.getElementById("tableViewBtn");
+    var gridBtn = document.getElementById("gridViewBtn");
+    var tableView = document.getElementById("books-table-view");
+    var gridView = document.getElementById("books-grid-view");
+    var STORAGE_KEY = "bookListView";
+
+    function setView(view) {
+        if (view === "grid") {
+            tableView.classList.add("d-none");
+            gridView.classList.remove("d-none");
+            gridBtn.classList.add("active");
+            tableBtn.classList.remove("active");
+        } else {
+            gridView.classList.add("d-none");
+            tableView.classList.remove("d-none");
+            tableBtn.classList.add("active");
+            gridBtn.classList.remove("active");
+        }
+        try { sessionStorage.setItem(STORAGE_KEY, view); } catch (e) {}
+    }
+
+    tableBtn.addEventListener("click", function () { setView("table"); });
+    gridBtn.addEventListener("click", function () { setView("grid"); });
+
+    var saved = null;
+    try { saved = sessionStorage.getItem(STORAGE_KEY); } catch (e) {}
+    if (saved === "grid") setView("grid");
+});
+</script>
+{% endblock %}

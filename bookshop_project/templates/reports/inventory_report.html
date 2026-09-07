@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Inventory Report{% endblock %}
+{% block page_title %}Reports{% endblock %}
+{% block content %}
+
+<div class="d-flex gap-2 mb-3">
+    <a href="{% url 'sales_report' %}" class="btn btn-outline-plain btn-sm">Sales Report</a>
+    <a href="{% url 'inventory_report' %}" class="btn btn-primary-custom btn-sm">Inventory Report</a>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-label mb-1">Total Books</div>
+            <div class="stat-value">{{ total_books }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-label mb-1">Total Stock</div>
+            <div class="stat-value">{{ total_stock }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-label mb-1">Low Stock</div>
+            <div class="stat-value">{{ low_stock_books.count }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-label mb-1">Out of Stock</div>
+            <div class="stat-value">{{ out_of_stock_books.count }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="card-surface mb-3">
+    <div class="d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">Total Stock Value (price &times; quantity)</span>
+        <span class="fs-5 fw-bold">₦{{ stock_value|floatformat:2 }}</span>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-lg-6">
+        <div class="card-surface h-100">
+            <h3 class="mb-3" style="font-size: 16px;">Low Stock Books <span class="caption">(at or below {{ low_stock_threshold }} copies)</span></h3>
+            {% for book in low_stock_books %}
+                <div class="d-flex justify-content-between align-items-center py-2 {% if not forloop.last %}border-bottom{% endif %}" style="border-color: var(--color-border) !important;">
+                    <span class="fw-medium" style="font-size: 13px;">{{ book.title }}</span>
+                    <span class="status-badge status-low-stock">{{ book.quantity }} left</span>
+                </div>
+            {% empty %}
+                <div class="empty-state py-3"><i class="bi bi-check-circle"></i><div>No books are low on stock.</div></div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="col-12 col-lg-6">
+        <div class="card-surface h-100">
+            <h3 class="mb-3" style="font-size: 16px;">Out of Stock Books</h3>
+            {% for book in out_of_stock_books %}
+                <div class="d-flex justify-content-between align-items-center py-2 {% if not forloop.last %}border-bottom{% endif %}" style="border-color: var(--color-border) !important;">
+                    <span class="fw-medium" style="font-size: 13px;">{{ book.title }}</span>
+                    <span class="status-badge status-out-of-stock">Out of Stock</span>
+                </div>
+            {% empty %}
+                <div class="empty-state py-3"><i class="bi bi-check-circle"></i><div>No books are out of stock.</div></div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

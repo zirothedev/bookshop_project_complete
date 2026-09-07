@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Sales{% endblock %}
+{% block page_title %}Sales History{% endblock %}
+{% block content %}
+<form method="get" class="card-surface mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-12 col-md-4">
+            <label class="form-label">Customer</label>
+            <div class="search-input-wrap">
+                <i class="bi bi-search"></i>
+                <input type="text" name="q" class="form-control" placeholder="Search by customer..." value="{{ query }}">
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label">From</label>
+            <input type="date" name="from" class="form-control" value="{{ date_from }}">
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label">To</label>
+            <input type="date" name="to" class="form-control" value="{{ date_to }}">
+        </div>
+        <div class="col-12 col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary-custom flex-grow-1">Apply</button>
+            <a href="{% url 'sale_list' %}" class="btn btn-outline-plain">Clear</a>
+        </div>
+    </div>
+</form>
+
+<div class="d-flex justify-content-end mb-3">
+    <a href="{% url 'sale_create' %}" class="btn btn-primary-custom"><i class="bi bi-plus-lg"></i> Record Sale</a>
+</div>
+
+<div class="table-custom">
+    <table class="table">
+        <thead><tr><th>Sale ID</th><th>Customer</th><th>Date</th><th class="text-end">Total</th></tr></thead>
+        <tbody>
+        {% for sale in sales %}
+            <tr>
+                <td><a href="{% url 'sale_detail' sale.pk %}">#{{ sale.pk }}</a></td>
+                <td class="fw-semibold">{{ sale.customer.name }}</td>
+                <td class="text-secondary-custom">{{ sale.created_at|date:"d M Y, H:i" }}</td>
+                <td class="text-end fw-semibold">₦{{ sale.total_amount|floatformat:2 }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="4">
+                <div class="empty-state">
+                    <i class="bi bi-receipt"></i>
+                    <div class="empty-title">No sales recorded yet</div>
+                    <a href="{% url 'sale_create' %}" class="btn btn-primary-custom mt-3">Record a Sale</a>
+                </div>
+            </td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

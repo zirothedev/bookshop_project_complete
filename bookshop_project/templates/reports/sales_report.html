@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Sales Report{% endblock %}
+{% block page_title %}Reports{% endblock %}
+{% block content %}
+
+<div class="d-flex gap-2 mb-3">
+    <a href="{% url 'sales_report' %}" class="btn btn-primary-custom btn-sm">Sales Report</a>
+    <a href="{% url 'inventory_report' %}" class="btn btn-outline-plain btn-sm">Inventory Report</a>
+</div>
+
+<form method="get" class="card-surface mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-6 col-md-3">
+            <label class="form-label">From</label>
+            <input type="date" name="from" class="form-control" value="{{ date_from }}">
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label">To</label>
+            <input type="date" name="to" class="form-control" value="{{ date_to }}">
+        </div>
+        <div class="col-12 col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-primary-custom flex-grow-1">Apply</button>
+            <a href="{% url 'sales_report' %}" class="btn btn-outline-plain">Clear</a>
+        </div>
+    </div>
+</form>
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-md-4">
+        <div class="stat-card">
+            <div class="stat-label mb-1">Number of Sales</div>
+            <div class="stat-value">{{ sale_count }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4">
+        <div class="stat-card">
+            <div class="stat-label mb-1">Total Revenue</div>
+            <div class="stat-value">₦{{ total_revenue|floatformat:2 }}</div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="stat-card">
+            <div class="stat-label mb-1">Average Sale Value</div>
+            <div class="stat-value">₦{{ average_sale|floatformat:2 }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-lg-5">
+        <div class="card-surface h-100">
+            <h3 class="mb-3" style="font-size: 16px;">Top Selling Books</h3>
+            {% for row in top_books %}
+                <div class="d-flex justify-content-between align-items-center py-2 {% if not forloop.last %}border-bottom{% endif %}" style="border-color: var(--color-border) !important;">
+                    <div>
+                        <div class="fw-medium" style="font-size: 13px;">{{ row.book__title }}</div>
+                        <div class="caption">{{ row.qty_sold }} sold</div>
+                    </div>
+                    <span class="fw-semibold" style="font-size: 13px;">₦{{ row.revenue|floatformat:0 }}</span>
+                </div>
+            {% empty %}
+                <div class="empty-state py-3"><i class="bi bi-bar-chart"></i><div>No sales in this range.</div></div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="col-12 col-lg-7">
+        <div class="card-surface h-100">
+            <h3 class="mb-3" style="font-size: 16px;">Recent Transactions</h3>
+            <div class="table-custom" style="border: none;">
+                <table class="table mb-0">
+                    <thead><tr><th>Sale</th><th>Customer</th><th>Date</th><th class="text-end">Total</th></tr></thead>
+                    <tbody>
+                    {% for sale in recent_transactions %}
+                        <tr>
+                            <td><a href="{% url 'sale_detail' sale.pk %}">#{{ sale.pk }}</a></td>
+                            <td>{{ sale.customer.name }}</td>
+                            <td class="text-secondary-custom">{{ sale.created_at|date:"d M Y" }}</td>
+                            <td class="text-end">₦{{ sale.total_amount|floatformat:2 }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="4"><div class="empty-state py-3"><i class="bi bi-receipt"></i><div>No transactions in this range.</div></div></td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
