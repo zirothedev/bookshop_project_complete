@@ -25,7 +25,11 @@ SECRET_KEY = 'django-insecure-2x20@=u7&1az_s6-flq8i2dd6ha&n=__s_o9p#^bk)sr&e7*p1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver']
+ALLOWED_HOSTS = ['bookshopmanagement.onrender.com']
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://bookshopmanagement.onrender.com",
+]
 
 
 # Application definition
